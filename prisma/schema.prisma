@@ -10,12 +10,86 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
+
+enum ColaboradorStatus {
+  ATIVO
+  REMOVIDO
+}
+
+enum TipoDocumentoStatus {
+  ATIVO
+  REMOVIDO
+}
+
+enum VinculoStatus {
+  ATIVO
+  DESVINCULADO
+}
+
+enum DocumentoStatus {
+  ATIVO
+  REMOVIDO
+}
+
+model Colaborador {
+  id        Int               @id @default(autoincrement())
   nome      String
   sobrenome String
-  email     String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
+  email     String            @unique
+  status    ColaboradorStatus @default(ATIVO)
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
 
-  @@map("users")
+  documentos ColaboradorHasDocuments[]
+
+  @@index([status])
+  @@map("colaboradores")
+}
+
+model TipoDocumento {
+  id        Int                 @id @default(autoincrement())
+  nome      String              @unique
+  status    TipoDocumentoStatus @default(ATIVO)
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  vinculos ColaboradorHasDocuments[]
+
+  @@index([status])
+  @@map("tipos_documento")
+}
+
+model ColaboradorHasDocuments {
+  id              Int           @id @default(autoincrement())
+  colaboradorId   Int           @map("colaborador_id")
+  tipoDocumentoId Int           @map("tipo_documento_id")
+  status          VinculoStatus @default(ATIVO)
+  versaoAtualId   Int?          @unique @map("versao_atual_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  colaborador   Colaborador   @relation(fields: [colaboradorId], references: [id])
+  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+  versaoAtual   Documento?    @relation("VersaoAtual", fields: [versaoAtualId], references: [id])
+  versoes       Documento[]   @relation("Versoes")
+
+  @@unique([colaboradorId, tipoDocumentoId])
+  @@index([status])
+  @@map("colaborador_has_documents")
+}
+
+model Documento {
+  id           Int             @id @default(autoincrement())
+  vinculoId    Int             @map("vinculo_id")
+  numeroVersao Int             @map("numero_versao")
+  status       DocumentoStatus @default(ATIVO)
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  vinculo            ColaboradorHasDocuments  @relation("Versoes", fields: [vinculoId], references: [id])
+  vinculoVersaoAtual ColaboradorHasDocuments? @relation("VersaoAtual")
+
+  @@unique([vinculoId, numeroVersao])
+  @@index([status])
+  @@index([createdAt])
+  @@map("documentos")
 }

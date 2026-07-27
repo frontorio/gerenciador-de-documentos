@@ -55,12 +55,64 @@ npm run start:dev
 
 ## Modelo de dados
 
-### `users`
+```
+colaboradores ─┐
+               ├─< colaborador_has_documents >─ tipos_documento
+               │             │
+               │             └──(versao_atual)──> documentos (versões)
+```
 
-| Campo        | Tipo     | Observações                    |
-| ------------ | -------- | ------------------------------ |
-| `id`         | Int      | Chave primária (autoincremento)|
-| `nome`       | String   |                                |
-| `sobrenome`  | String   |                                |
-| `email`      | String   | Único                          |
-| `created_at` | DateTime | Preenchido automaticamente     |
+### `colaboradores`
+
+| Campo        | Tipo     | Observações                        |
+| ------------ | -------- | ---------------------------------- |
+| `id`         | Int      | Chave primária (autoincremento)    |
+| `nome`       | String   |                                    |
+| `sobrenome`  | String   |                                    |
+| `email`      | String   | Único                              |
+| `status`     | Enum     | `ATIVO` / `REMOVIDO` (soft delete) |
+| `created_at` | DateTime | Preenchido automaticamente         |
+| `updated_at` | DateTime | Atualizado automaticamente         |
+
+### `tipos_documento`
+
+| Campo        | Tipo     | Observações                        |
+| ------------ | -------- | ---------------------------------- |
+| `id`         | Int      | Chave primária (autoincremento)    |
+| `nome`       | String   | Único (ex.: CPF, ASO, Certidão)    |
+| `status`     | Enum     | `ATIVO` / `REMOVIDO` (soft delete) |
+| `created_at` | DateTime |                                    |
+| `updated_at` | DateTime |                                    |
+
+### `colaborador_has_documents` (vínculo / requisito, N:N)
+
+Vincula um colaborador a um tipo de documento obrigatório. É a origem do
+estado **pendente/enviado**: pendente quando `versao_atual_id` é `NULL`.
+
+| Campo             | Tipo | Observações                                        |
+| ----------------- | ---- | -------------------------------------------------- |
+| `id`              | Int  | Chave primária                                     |
+| `colaborador_id`  | Int  | FK → `colaboradores`                               |
+| `tipo_documento_id` | Int | FK → `tipos_documento`                            |
+| `status`          | Enum | `ATIVO` / `DESVINCULADO` (desvinculação lógica)    |
+| `versao_atual_id` | Int? | FK → `documentos`; `NULL` = pendente               |
+| `created_at`      | DateTime |                                                |
+| `updated_at`      | DateTime |                                                |
+
+Restrição única `(colaborador_id, tipo_documento_id)`.
+
+### `documentos` (envios / versões)
+
+Cada envio é uma versão imutável. O reenvio cria uma nova versão e atualiza
+o ponteiro `versao_atual_id` do vínculo, dentro de uma transação — as versões
+anteriores são preservadas.
+
+| Campo          | Tipo | Observações                              |
+| -------------- | ---- | ---------------------------------------- |
+| `id`           | Int  | Chave primária                           |
+| `vinculo_id`   | Int  | FK → `colaborador_has_documents`         |
+| `numero_versao`| Int  | Sequencial por vínculo                    |
+| `status`       | Enum | `ATIVO` / `REMOVIDO` (soft delete)       |
+| `created_at`   | DateTime |                                      |
+
+Restrição única `(vinculo_id, numero_versao)`.
