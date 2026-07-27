@@ -32,6 +32,9 @@ docker compose up --build
 
 API disponível em `http://localhost:3000`.
 
+Documentação interativa (Swagger UI): `http://localhost:3000/docs`
+Spec OpenAPI (JSON): `http://localhost:3000/docs-json`
+
 ## Executando localmente (sem Docker para a API)
 
 Suba apenas o banco via Docker e rode a API na máquina:

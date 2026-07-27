@@ -11,11 +11,13 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ColaboradoresService } from './colaboradores.service';
 import { CreateColaboradorDto } from './dto/create-colaborador.dto';
 import { UpdateColaboradorDto } from './dto/update-colaborador.dto';
 
+@ApiTags('colaboradores')
 @Controller('colaboradores')
 export class ColaboradoresController {
   constructor(private readonly colaboradoresService: ColaboradoresService) {}

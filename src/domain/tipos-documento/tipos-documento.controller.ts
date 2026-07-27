@@ -11,11 +11,13 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { TiposDocumentoService } from './tipos-documento.service';
 import { CreateTipoDocumentoDto } from './dto/create-tipo-documento.dto';
 import { UpdateTipoDocumentoDto } from './dto/update-tipo-documento.dto';
 
+@ApiTags('tipos-documento')
 @Controller('tipos-documento')
 export class TiposDocumentoController {
   constructor(private readonly tiposDocumentoService: TiposDocumentoService) {}
