@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ColaboradoresModule } from './domain/colaboradores/colaboradores.module';
 import { TiposDocumentoModule } from './domain/tipos-documento/tipos-documento.module';
 import { VinculosModule } from './domain/vinculos/vinculos.module';
+import { DocumentosModule } from './domain/documentos/documentos.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { VinculosModule } from './domain/vinculos/vinculos.module';
     ColaboradoresModule,
     TiposDocumentoModule,
     VinculosModule,
+    DocumentosModule,
   ],
 })
 export class AppModule {}
