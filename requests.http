@@ -1,0 +1,126 @@
+### Gerenciador de Documentos — coleção de requisições
+### Use com a extensão "REST Client" (VS Code) ou o HTTP Client do JetBrains.
+### Dica: rode `npm run prisma:seed` antes para ter a massa de testes carregada.
+
+@baseUrl = http://localhost:3000
+
+### ---------------------------------------------------------------------------
+### COLABORADORES
+### ---------------------------------------------------------------------------
+
+### Listar colaboradores (paginado)
+GET {{baseUrl}}/colaboradores?page=1&limit=10
+
+### Buscar colaborador por id
+GET {{baseUrl}}/colaboradores/1
+
+### Criar colaborador
+POST {{baseUrl}}/colaboradores
+Content-Type: application/json
+
+{
+  "nome": "Gabriel",
+  "sobrenome": "Frontório",
+  "email": "gabriel.novo@example.com"
+}
+
+### Atualizar colaborador
+PATCH {{baseUrl}}/colaboradores/1
+Content-Type: application/json
+
+{
+  "sobrenome": "Silva Santos"
+}
+
+### Remover colaborador (soft delete)
+DELETE {{baseUrl}}/colaboradores/4
+
+### ---------------------------------------------------------------------------
+### TIPOS DE DOCUMENTO
+### ---------------------------------------------------------------------------
+
+### Listar tipos de documento
+GET {{baseUrl}}/tipos-documento?page=1&limit=10
+
+### Buscar tipo por id
+GET {{baseUrl}}/tipos-documento/1
+
+### Criar tipo de documento
+POST {{baseUrl}}/tipos-documento
+Content-Type: application/json
+
+{
+  "nome": "Carteira de Trabalho"
+}
+
+### Atualizar tipo de documento
+PATCH {{baseUrl}}/tipos-documento/1
+Content-Type: application/json
+
+{
+  "nome": "CPF (atualizado)"
+}
+
+### Remover tipo de documento (soft delete)
+DELETE {{baseUrl}}/tipos-documento/5
+
+### ---------------------------------------------------------------------------
+### VÍNCULOS (colaborador <-> tipo de documento)
+### ---------------------------------------------------------------------------
+
+### Listar vínculos de um colaborador (com estado pendente/enviado)
+GET {{baseUrl}}/colaboradores/1/vinculos?page=1&limit=10
+
+### Vincular colaborador a um tipo de documento
+POST {{baseUrl}}/colaboradores/1/vinculos
+Content-Type: application/json
+
+{
+  "tipoDocumentoId": 4
+}
+
+### Desvincular (soft delete do vínculo)
+DELETE {{baseUrl}}/colaboradores/1/vinculos/4
+
+### ---------------------------------------------------------------------------
+### DOCUMENTOS (envio / versionamento)
+### ---------------------------------------------------------------------------
+
+### Enviar / reenviar documento (cria nova versão)
+POST {{baseUrl}}/colaboradores/1/documentos
+Content-Type: application/json
+
+{
+  "tipoDocumentoId": 1
+}
+
+### Histórico de versões de um documento
+GET {{baseUrl}}/colaboradores/1/documentos/1/historico?page=1&limit=10
+
+### Remover documento enviado (soft delete + rollback de versão)
+DELETE {{baseUrl}}/colaboradores/1/documentos/1
+
+### Listar documentos pendentes (com filtros opcionais)
+GET {{baseUrl}}/documentos/pendentes?page=1&limit=10
+
+### Pendentes filtrando por colaborador
+GET {{baseUrl}}/documentos/pendentes?colaboradorId=4
+
+### Pendentes filtrando por tipo de documento
+GET {{baseUrl}}/documentos/pendentes?tipoDocumentoId=1
+
+### ---------------------------------------------------------------------------
+### ESTATÍSTICAS
+### ---------------------------------------------------------------------------
+
+### Dashboard (todas as métricas)
+GET {{baseUrl}}/estatisticas?limit=5
+
+### Percentual global de completude
+GET {{baseUrl}}/estatisticas/completude
+
+### Tipos mais pendentes (ranking)
+GET {{baseUrl}}/estatisticas/tipos-mais-pendentes?limit=5
+
+### Últimos envios realizados
+GET {{baseUrl}}/estatisticas/ultimos-envios?limit=5

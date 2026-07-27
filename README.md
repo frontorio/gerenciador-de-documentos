@@ -42,8 +42,26 @@ Suba apenas o banco via Docker e rode a API na máquina:
 ```bash
 docker compose up -d db
 npx prisma migrate dev      # cria/aplica as migrations
+npm run prisma:seed         # (opcional) popula a massa de testes
 npm run start:dev
 ```
+
+## Massa de testes (seed)
+
+Para popular o banco com dados realistas de exemplo (colaboradores, tipos,
+vínculos, envios com versões e casos de soft delete):
+
+```bash
+npm run prisma:seed
+```
+
+O seed limpa os dados existentes e recria uma base com 5 colaboradores ativos
+(+1 removido), 5 tipos ativos (+1 removido), vínculos variados, documentos com
+múltiplas versões e um caso de versão removida com rollback. Útil para exercitar
+estatísticas, pendências e histórico.
+
+Para testar os endpoints manualmente, use o arquivo [`requests.http`](./requests.http)
+com a extensão **REST Client** (VS Code) ou o **HTTP Client** do JetBrains.
 
 ## Scripts úteis
 
@@ -54,6 +72,7 @@ npm run start:dev
 | `npm test`               | Testes unitários (Jest)            |
 | `npm run test:cov`       | Testes com cobertura               |
 | `npm run prisma:migrate` | Cria/aplica migrations (dev)       |
+| `npm run prisma:seed`    | Popula a massa de testes           |
 | `npm run prisma:studio`  | Abre o Prisma Studio               |
 
 ## Modelo de dados
@@ -119,3 +138,82 @@ anteriores são preservadas.
 | `created_at`   | DateTime |                                      |
 
 Restrição única `(vinculo_id, numero_versao)`.
+
+## Endpoints
+
+Documentação interativa completa em `http://localhost:3000/docs` (Swagger).
+Todas as listagens são paginadas via `?page` (default `1`) e `?limit` (default `10`).
+
+### Colaboradores
+
+| Método   | Rota                 | Descrição                              |
+| -------- | -------------------- | -------------------------------------- |
+| `POST`   | `/colaboradores`     | Cadastra um colaborador                |
+| `GET`    | `/colaboradores`     | Lista colaboradores ativos (paginado)  |
+| `GET`    | `/colaboradores/:id` | Busca um colaborador por id            |
+| `PATCH`  | `/colaboradores/:id` | Atualiza um colaborador                |
+| `DELETE` | `/colaboradores/:id` | Remove (soft delete) um colaborador    |
+
+Body de criação:
+
+```json
+{ "nome": "Ana", "sobrenome": "Silva", "email": "ana.silva@example.com" }
+```
+
+### Tipos de documento
+
+| Método   | Rota                   | Descrição                            |
+| -------- | ---------------------- | ------------------------------------ |
+| `POST`   | `/tipos-documento`     | Cadastra um tipo (`nome` único)      |
+| `GET`    | `/tipos-documento`     | Lista tipos ativos (paginado)        |
+| `GET`    | `/tipos-documento/:id` | Busca um tipo por id                 |
+| `PATCH`  | `/tipos-documento/:id` | Atualiza um tipo                     |
+| `DELETE` | `/tipos-documento/:id` | Remove (soft delete) um tipo         |
+
+Body de criação:
+
+```json
+{ "nome": "CPF" }
+```
+
+### Vínculos (colaborador ↔ tipo de documento)
+
+| Método   | Rota                                                     | Descrição                                             |
+| -------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| `POST`   | `/colaboradores/:colaboradorId/vinculos`                 | Vincula a um tipo; reativa se estava desvinculado     |
+| `GET`    | `/colaboradores/:colaboradorId/vinculos`                 | Lista vínculos ativos com estado `PENDENTE`/`ENVIADO` |
+| `DELETE` | `/colaboradores/:colaboradorId/vinculos/:tipoDocumentoId`| Desvincula (soft delete do vínculo)                   |
+
+Body de vinculação:
+
+```json
+{ "tipoDocumentoId": 1 }
+```
+
+### Documentos (envio / versionamento)
+
+| Método   | Rota                                                                | Descrição                                            |
+| -------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| `POST`   | `/colaboradores/:colaboradorId/documentos`                          | Envia/reenvia (cria nova versão, atômico)            |
+| `GET`    | `/colaboradores/:colaboradorId/documentos/:tipoDocumentoId/historico`| Histórico de versões (paginado)                     |
+| `DELETE` | `/colaboradores/:colaboradorId/documentos/:tipoDocumentoId`         | Remove a versão atual (soft delete + rollback)       |
+| `GET`    | `/documentos/pendentes`                                             | Lista requisitos pendentes (filtros + paginação)     |
+
+Body de envio:
+
+```json
+{ "tipoDocumentoId": 1 }
+```
+
+Filtros de pendentes: `?colaboradorId=` e `?tipoDocumentoId=` (opcionais).
+
+### Estatísticas
+
+| Método | Rota                                  | Descrição                                  |
+| ------ | ------------------------------------- | ------------------------------------------ |
+| `GET`  | `/estatisticas`                       | Dashboard com as três métricas             |
+| `GET`  | `/estatisticas/completude`            | Percentual global de documentação completa |
+| `GET`  | `/estatisticas/tipos-mais-pendentes`  | Ranking dos tipos mais pendentes           |
+| `GET`  | `/estatisticas/ultimos-envios`        | Últimos envios realizados                  |
+
+Parâmetro `?limit=` (default `5`, máx. `50`) nos rankings/listas.
